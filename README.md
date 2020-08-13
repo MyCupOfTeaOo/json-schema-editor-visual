@@ -1,5 +1,7 @@
 # qg-json-schema-editor-visual
 
+> :warning: forked from https://github.com/YMFE/json-schema-editor-visual
+
 A json-schema editor of high efficient and easy-to-use, base on React.
 
 > 该版本是为了适配公司业务修改过的
