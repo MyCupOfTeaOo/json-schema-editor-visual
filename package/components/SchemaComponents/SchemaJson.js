@@ -14,7 +14,7 @@ import {
   message,
   Tooltip
 } from 'antd';
-import FieldInput from './FieldInput'
+import FieldInput from './FieldInput';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -29,14 +29,30 @@ import LocaleProvider from '../LocalProvider/index.js';
 import utils from '../../utils';
 import MockSelect from '../MockSelect/index.js';
 
-const mapping = (name, data, showEdit, showAdv) => {
+const mapping = (name, data, showEdit, showAdv, logicEntities) => {
   switch (data.type) {
     case 'array':
-      return <SchemaArray prefix={name} data={data} showEdit={showEdit} showAdv={showAdv} />;
+      return (
+        <SchemaArray
+          prefix={name}
+          data={data}
+          showEdit={showEdit}
+          showAdv={showAdv}
+          logicEntities={logicEntities}
+        />
+      );
       break;
     case 'object':
       let nameArray = [].concat(name, 'properties');
-      return <SchemaObject prefix={nameArray} data={data} showEdit={showEdit} showAdv={showAdv} />;
+      return (
+        <SchemaObject
+          prefix={nameArray}
+          data={data}
+          showEdit={showEdit}
+          showAdv={showAdv}
+          logicEntities={logicEntities}
+        />
+      );
       break;
     default:
       return null;
@@ -85,12 +101,18 @@ class SchemaArray extends PureComponent {
     this.Model.changeValueAction({ key, value });
   };
 
-  handleChangeTitle = e =>{
+  handleChangeTitle = e => {
     let prefix = this.getPrefix();
     let key = [].concat(prefix, `title`);
     let value = e.target.value;
     this.Model.changeValueAction({ key, value });
-  }
+  };
+
+  handleChangeLogicEntityId = value => {
+    let prefix = this.getPrefix();
+    let key = [].concat(prefix, `logicEntityId`);
+    this.Model.changeValueAction({ key, value });
+  };
 
   // 增加子节点
   handleAddChildField = () => {
@@ -121,12 +143,21 @@ class SchemaArray extends PureComponent {
     const items = data.items;
     let prefixArray = [].concat(prefix, 'items');
 
-    let prefixArrayStr = [].concat(prefixArray, 'properties').join(JSONPATH_JOIN_CHAR);
+    let prefixArrayStr = []
+      .concat(prefixArray, 'properties')
+      .join(JSONPATH_JOIN_CHAR);
     let showIcon = this.context.getOpenValue([prefixArrayStr]);
+    const showLogicEntity =
+      !!this.props.logicEntities && this.props.logicEntities.length > 0;
     return (
       !_.isUndefined(data.items) && (
         <div className="array-type">
-          <Row className="array-item-type" type="flex" justify="space-around" align="middle">
+          <Row
+            className="array-item-type"
+            type="flex"
+            justify="space-around"
+            align="middle"
+          >
             <Col
               span={8}
               className="col-item name-item col-item-name"
@@ -145,7 +176,11 @@ class SchemaArray extends PureComponent {
                   ) : null}
                 </Col>
                 <Col span={22}>
-                  <Input addonAfter={<Checkbox disabled />} disabled value="Items" />
+                  <Input
+                    addonAfter={<Checkbox disabled />}
+                    disabled
+                    value="Items"
+                  />
                 </Col>
               </Row>
             </Col>
@@ -167,7 +202,6 @@ class SchemaArray extends PureComponent {
             </Col>
             {this.context.isMock && (
               <Col span={3} className="col-item col-item-mock">
-                
                 <MockSelect
                   schema={items}
                   showEdit={() => this.handleShowEdit('mock', items.type)}
@@ -175,23 +209,61 @@ class SchemaArray extends PureComponent {
                 />
               </Col>
             )}
-            <Col span={this.context.isMock ? 4 : 5} className="col-item col-item-mock">
+            <Col
+              span={
+                this.context.isMock
+                  ? showLogicEntity
+                    ? 2
+                    : 4
+                  : showLogicEntity
+                  ? 3
+                  : 5
+              }
+              className="col-item col-item-mock"
+            >
               <Input
-                addonAfter={<Icon type="edit" onClick={() => this.handleShowEdit('title')} />}
                 placeholder={LocaleProvider('title')}
                 value={items.title}
                 onChange={this.handleChangeTitle}
               />
             </Col>
-            <Col span={this.context.isMock ? 4 : 5} className="col-item col-item-desc">
+            {showLogicEntity && (
+              <Col span={2} className="col-item col-item-logicEntityId">
+                <Select
+                  placeholder={LocaleProvider('logicEntityId')}
+                  value={items.logicEntityId}
+                  onChange={this.handleChangeLogicEntityId}
+                >
+                  {(this.props.logicEntities || []).map(item => {
+                    return (
+                      <Option value={item.id} key={item.id}>
+                        {item.name}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </Col>
+            )}
+            <Col
+              span={this.context.isMock ? 4 : 5}
+              className="col-item col-item-desc"
+            >
               <Input
-                addonAfter={<Icon type="edit" onClick={() => this.handleShowEdit('description')} />}
+                addonAfter={
+                  <Icon
+                    type="edit"
+                    onClick={() => this.handleShowEdit('description')}
+                  />
+                }
                 placeholder={LocaleProvider('description')}
                 value={items.description}
                 onChange={this.handleChangeDesc}
               />
             </Col>
-            <Col span={this.context.isMock ? 2: 3} className="col-item col-item-setting">
+            <Col
+              span={this.context.isMock ? 2 : 3}
+              className="col-item col-item-setting"
+            >
               <span className="adv-set" onClick={this.handleShowAdv}>
                 <Tooltip placement="top" title={LocaleProvider('adv_setting')}>
                   <Icon type="setting" />
@@ -200,14 +272,25 @@ class SchemaArray extends PureComponent {
 
               {items.type === 'object' ? (
                 <span onClick={this.handleAddChildField}>
-                  <Tooltip placement="top" title={LocaleProvider('add_child_node')}>
+                  <Tooltip
+                    placement="top"
+                    title={LocaleProvider('add_child_node')}
+                  >
                     <Icon type="plus" className="plus" />
                   </Tooltip>
                 </span>
               ) : null}
             </Col>
           </Row>
-          <div className="option-formStyle">{mapping(prefixArray, items, showEdit, showAdv)}</div>
+          <div className="option-formStyle">
+            {mapping(
+              prefixArray,
+              items,
+              showEdit,
+              showAdv,
+              this.props.logicEntities
+            )}
+          </div>
         </div>
       )
     );
@@ -217,7 +300,8 @@ class SchemaArray extends PureComponent {
 SchemaArray.contextTypes = {
   getOpenValue: PropTypes.func,
   Model: PropTypes.object,
-  isMock: PropTypes.bool
+  isMock: PropTypes.bool,
+  logicEntities: PropTypes.array
 };
 
 class SchemaItem extends PureComponent {
@@ -273,7 +357,13 @@ class SchemaItem extends PureComponent {
     let key = [].concat(prefix, `title`);
     let value = e.target.value;
     this.Model.changeValueAction({ key, value });
-  }
+  };
+
+  handleChangeLogicEntityId = value => {
+    let prefix = this.getPrefix();
+    let key = [].concat(prefix, `logicEntityId`);
+    this.Model.changeValueAction({ key, value });
+  };
 
   // 修改数据类型
   handleChangeType = e => {
@@ -297,7 +387,12 @@ class SchemaItem extends PureComponent {
   handleShowEdit = (editorName, type) => {
     const { data, name, showEdit } = this.props;
 
-    showEdit(this.getPrefix(), editorName, data.properties[name][editorName], type);
+    showEdit(
+      this.getPrefix(),
+      editorName,
+      data.properties[name][editorName],
+      type
+    );
   };
 
   // 展示高级设置弹窗
@@ -334,9 +429,13 @@ class SchemaItem extends PureComponent {
     let prefixArray = [].concat(prefix, name);
 
     let prefixStr = prefix.join(JSONPATH_JOIN_CHAR);
-    let prefixArrayStr = [].concat(prefixArray, 'properties').join(JSONPATH_JOIN_CHAR);
+    let prefixArrayStr = []
+      .concat(prefixArray, 'properties')
+      .join(JSONPATH_JOIN_CHAR);
     let show = this.context.getOpenValue([prefixStr]);
     let showIcon = this.context.getOpenValue([prefixArrayStr]);
+    const showLogicEntity =
+      !!this.props.logicEntities && this.props.logicEntities.length > 0;
     return show ? (
       <div>
         <Row type="flex" justify="space-around" align="middle">
@@ -364,7 +463,9 @@ class SchemaItem extends PureComponent {
                       <Checkbox
                         onChange={this.handleEnableRequire}
                         checked={
-                          _.isUndefined(data.required) ? false : data.required.indexOf(name) != -1
+                          _.isUndefined(data.required)
+                            ? false
+                            : data.required.indexOf(name) != -1
                         }
                       />
                     </Tooltip>
@@ -375,7 +476,6 @@ class SchemaItem extends PureComponent {
               </Col>
             </Row>
           </Col>
-
 
           <Col span={3} className="col-item col-item-type">
             <Select
@@ -392,7 +492,6 @@ class SchemaItem extends PureComponent {
               })}
             </Select>
           </Col>
-
 
           {this.context.isMock && (
             <Col span={3} className="col-item col-item-mock">
@@ -413,26 +512,62 @@ class SchemaItem extends PureComponent {
             </Col>
           )}
 
-          <Col span={this.context.isMock ? 4 : 5} className="col-item col-item-mock">
+          <Col
+            span={
+              this.context.isMock
+                ? showLogicEntity
+                  ? 2
+                  : 4
+                : showLogicEntity
+                ? 3
+                : 5
+            }
+            className="col-item col-item-mock"
+          >
             <Input
-              addonAfter={<Icon type="edit" onClick={() => this.handleShowEdit('title')} />}
               placeholder={LocaleProvider('title')}
               value={value.title}
               onChange={this.handleChangeTitle}
             />
           </Col>
-
-          <Col span={this.context.isMock ? 4 : 5} className="col-item col-item-desc">
+          {showLogicEntity && (
+            <Col span={2} className="col-item col-item-logicEntityId">
+              <Select
+                placeholder={LocaleProvider('logicEntityId')}
+                value={value.logicEntityId}
+                onChange={this.handleChangeLogicEntityId}
+              >
+                {(this.props.logicEntities || []).map(item => {
+                  return (
+                    <Option value={item.id} key={item.id}>
+                      {item.name}
+                    </Option>
+                  );
+                })}
+              </Select>
+            </Col>
+          )}
+          <Col
+            span={this.context.isMock ? 4 : 5}
+            className="col-item col-item-desc"
+          >
             <Input
-              addonAfter={<Icon type="edit" onClick={() => this.handleShowEdit('description')} />}
+              addonAfter={
+                <Icon
+                  type="edit"
+                  onClick={() => this.handleShowEdit('description')}
+                />
+              }
               placeholder={LocaleProvider('description')}
               value={value.description}
               onChange={this.handleChangeDesc}
             />
           </Col>
 
-          
-          <Col span={this.context.isMock ? 2: 3}  className="col-item col-item-setting">
+          <Col
+            span={this.context.isMock ? 2 : 3}
+            className="col-item col-item-setting"
+          >
             <span className="adv-set" onClick={this.handleShowAdv}>
               <Tooltip placement="top" title={LocaleProvider('adv_setting')}>
                 <Icon type="setting" />
@@ -445,14 +580,25 @@ class SchemaItem extends PureComponent {
               <DropPlus prefix={prefix} name={name} />
             ) : (
               <span onClick={this.handleAddField}>
-                <Tooltip placement="top" title={LocaleProvider('add_sibling_node')}>
+                <Tooltip
+                  placement="top"
+                  title={LocaleProvider('add_sibling_node')}
+                >
                   <Icon type="plus" className="plus" />
                 </Tooltip>
               </span>
             )}
           </Col>
         </Row>
-        <div className="option-formStyle">{mapping(prefixArray, value, showEdit, showAdv)}</div>
+        <div className="option-formStyle">
+          {mapping(
+            prefixArray,
+            value,
+            showEdit,
+            showAdv,
+            this.props.logicEntities
+          )}
+        </div>
       </div>
     ) : null;
   }
@@ -461,7 +607,8 @@ class SchemaItem extends PureComponent {
 SchemaItem.contextTypes = {
   getOpenValue: PropTypes.func,
   Model: PropTypes.object,
-  isMock: PropTypes.bool
+  isMock: PropTypes.bool,
+  logicEntities: PropTypes.array
 };
 
 class SchemaObjectComponent extends Component {
@@ -477,7 +624,7 @@ class SchemaObjectComponent extends Component {
   }
 
   render() {
-    const { data, prefix, showEdit, showAdv } = this.props;
+    const { data, prefix, showEdit, showAdv, logicEntities } = this.props;
     return (
       <div className="object-style">
         {Object.keys(data.properties).map((name, index) => (
@@ -488,6 +635,7 @@ class SchemaObjectComponent extends Component {
             prefix={prefix}
             showEdit={showEdit}
             showAdv={showAdv}
+            logicEntities={logicEntities}
           />
         ))}
       </div>
@@ -512,8 +660,13 @@ const DropPlus = (props, context) => {
       <Menu.Item>
         <span
           onClick={() => {
-            Model.setOpenValueAction({ key: [].concat(prefix, name, 'properties'), value: true });
-            Model.addChildFieldAction({ key: [].concat(prefix, name, 'properties') });
+            Model.setOpenValueAction({
+              key: [].concat(prefix, name, 'properties'),
+              value: true
+            });
+            Model.addChildFieldAction({
+              key: [].concat(prefix, name, 'properties')
+            });
           }}
         >
           {LocaleProvider('child_node')}
@@ -536,7 +689,13 @@ DropPlus.contextTypes = {
 };
 
 const SchemaJson = props => {
-  const item = mapping([], props.data, props.showEdit, props.showAdv);
+  const item = mapping(
+    [],
+    props.data,
+    props.showEdit,
+    props.showAdv,
+    props.logicEntities
+  );
   return <div className="schema-content">{item}</div>;
 };
 

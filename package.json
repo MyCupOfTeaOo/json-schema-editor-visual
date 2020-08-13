@@ -1,13 +1,13 @@
 {
-  "name": "json-schema-editor-visual",
+  "name": "qg-json-schema-editor-visual",
   "version": "1.1.1",
   "description": "jsonschema editor",
   "main": "package/index.js",
   "license": "MIC",
   "scripts": {
     "start": "ykit s -p 8082",
-    "demo": "NODE_ENV=production ykit pack -m",
-    "build": "NODE_ENV=production webpack"
+    "demo": "cross-env NODE_ENV=production ykit pack -m",
+    "build": "cross-env NODE_ENV=production webpack"
   },
   "dependencies": {
     "antd": "^3.1.6",
@@ -35,7 +35,8 @@
     "react-addons-perf": "^15.4.2",
     "style-loader": "^0.20.3",
     "webpack": "^4.5.0",
-    "webpack-cli": "^2.0.14",
+    "webpack-cli": "^3.1.1",
+    "ykit": "^0.8.13",
     "ykit-config-antd": "^1.2.0"
   }
 }

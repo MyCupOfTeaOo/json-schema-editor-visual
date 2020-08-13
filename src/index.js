@@ -24,7 +24,7 @@ const mock = [
   { name: '时间戳', mock: '@timestamp' }
 ];
 
-const JEditor1 = jeditor({mock: mock});
+const JEditor1 = jeditor({ mock: mock, lang: 'zh_CN' });
 
 render(
   <div>
@@ -33,7 +33,10 @@ render(
     </a>
     <p style={{ fontSize: '16px' }}>
       A json-schema editor of high efficient and easy-to-use, base on React.{' '}
-      <a target="_blank" href="https://github.com/YMFE/json-schema-editor-visual">
+      <a
+        target="_blank"
+        href="https://github.com/YMFE/json-schema-editor-visual"
+      >
         Github
       </a>
     </p>
@@ -51,8 +54,12 @@ render(
 
     <JEditor1
       showEditor={true}
-      isMock={false}
+      isMock
       data={''}
+      logicEntities={[
+        { id: '1', name: '测试' },
+        { id: '2', name: '第二个实体' }
+      ]}
       onChange={e => {
         console.log('changeValue', e);
       }}
